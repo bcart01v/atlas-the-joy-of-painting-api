@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bob Ross Episodes</title>
+    <link
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+        rel="stylesheet">
+    <link rel="stylesheet" href="static/css/styles.css">
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Bob Ross Episodes</h1>
+        
+        <!-- Filters Section -->
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <label for="filter-month" class="form-label">Broadcast Month</label>
+                <input type="text" id="filter-month" class="form-control" placeholder="e.g., January">
+            </div>
+            <div class="col-md-4">
+                <label for="filter-subject" class="form-label">Subject Matter</label>
+                <input type="text" id="filter-subject" class="form-control" placeholder="e.g., Mountain">
+            </div>
+            <div class="col-md-4">
+                <label for="filter-color" class="form-label">Color Palette</label>
+                <input type="text" id="filter-color" class="form-control" placeholder="e.g., Phthalo Blue">
+            </div>
+        </div>
+
+        <!-- Filter Button -->
+        <div class="row mb-3">
+            <div class="col text-center">
+                <button id="apply-filters" class="btn btn-primary">Apply Filters</button>
+            </div>
+        </div>
+
+        <!-- Episodes Table -->
+        <table id="episodes-table" class="table table-striped">
+            <caption>List of Bob Ross Episodes</caption>
+            <thead>
+                <tr>
+                    <th>Episode ID</th>
+                    <th>Title</th>
+                    <th>Air Date</th>
+                    <th>Broadcast Month</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data will be populated here -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const API_URL = "http://127.0.0.1:5005/episodes"; // Ensure this matches your API endpoint
+            const applyFiltersButton = document.getElementById("apply-filters");
+
+            // Fetch and populate table
+            async function fetchEpisodes(filters = {}) {
+                try {
+                    let url = API_URL;
+                    const queryParams = new URLSearchParams(filters).toString();
+                    if (queryParams) {
+                        url += `?${queryParams}`;
+                    }
+
+                    const response = await fetch(url);
+                    if (!response.ok) {
+                        throw new Error("Failed to fetch episodes");
+                    }
+
+                    const data = await response.json();
+                    if (data.episodes.length === 0) {
+                        renderEmptyMessage();
+                    } else {
+                        populateTable(data.episodes);
+                    }
+                } catch (error) {
+                    console.error("Error fetching episodes:", error);
+                }
+            }
+
+            // Populate the table
+            function populateTable(episodes) {
+                const tableBody = document.querySelector("#episodes-table tbody");
+                tableBody.innerHTML = ""; // Clear existing rows
+
+                episodes.forEach((episode) => {
+                    const row = document.createElement("tr");
+                    row.innerHTML = `
+                        <td>${episode.episode_id}</td>
+                        <td>${episode.title}</td>
+                        <td>${episode.air_date}</td>
+                        <td>${episode.broadcast_month}</td>
+                    `;
+                    tableBody.appendChild(row);
+                });
+            }
+
+            // Display a message when no episodes are found
+            function renderEmptyMessage() {
+                const tableBody = document.querySelector("#episodes-table tbody");
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-center">No episodes found.</td>
+                    </tr>
+                `;
+            }
+
+            // Apply filters when button is clicked
+            applyFiltersButton.addEventListener("click", () => {
+                const filters = {
+                    broadcast_month: document.getElementById("filter-month").value,
+                    subject: document.getElementById("filter-subject").value,
+                    color: document.getElementById("filter-color").value,
+                };
+                fetchEpisodes(filters);
+            });
+
+            // Load all episodes initially
+            fetchEpisodes();
+        });
+    </script>
+</body>
+</html>c
